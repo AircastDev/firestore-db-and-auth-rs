@@ -51,33 +51,41 @@ pub trait JoinableIterator: Iterator {
 
 impl<'a, VALUE> JoinableIterator for std::collections::hash_map::Keys<'a, String, VALUE> {}
 
+const FIRESTORE_EMULATOR_HOST: Option<&str> = option_env!("FIRESTORE_EMULATOR_HOST");
+
 #[inline]
 fn firebase_url_query(v1: &str) -> String {
+    firebase_url_base(&format!(
+        "projects/{}/databases/(default)/documents:runQuery",
+        v1
+    ))
+}
+
+#[inline]
+fn firebase_url_base(v1: &str) -> String {
     format!(
-        "https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents:runQuery",
+        "{}/v1/{}",
+        FIRESTORE_EMULATOR_HOST
+            .map(|host| format!("http://{}", host))
+            .unwrap_or("https://firestore.googleapis.com".to_string()),
         v1
     )
 }
 
 #[inline]
-fn firebase_url_base(v1: &str) -> String {
-    format!("https://firestore.googleapis.com/v1/{}", v1)
-}
-
-#[inline]
 fn firebase_url_extended(v1: &str, v2: &str, v3: &str) -> String {
-    format!(
-        "https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/{}/{}",
+    firebase_url_base(&format!(
+        "projects/{}/databases/(default)/documents/{}/{}",
         v1, v2, v3
-    )
+    ))
 }
 
 #[inline]
 fn firebase_url(v1: &str, v2: &str) -> String {
-    format!(
-        "https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/{}?",
+    firebase_url_base(&format!(
+        "projects/{}/databases/(default)/documents/{}?",
         v1, v2
-    )
+    ))
 }
 
 /// Converts an absolute path like "projects/{PROJECT_ID}/databases/(default)/documents/my_collection/document_id"
